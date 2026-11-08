@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obsidian Secure V2 — Files shared with you</title>
+  <meta name="description" content="Decrypt and download files shared with you via Obsidian Secure V2. Decryption and authentication happen inside your browser.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="site-wrapper">
+    <!-- Compact Header -->
+    <header class="site-header" id="siteHeader">
+      <a href="/" class="brand" aria-label="Obsidian Secure Homepage">
+        <span class="brand-emblem" aria-hidden="true"></span>
+        <span class="brand-text">Obsidian Secure</span>
+        <span class="brand-version">v2</span>
+      </a>
+      <span id="shareIdDisplay" class="hidden">{{ share_id }}</span>
+      <nav class="site-nav" aria-label="Navigation & Policies">
+        <a href="/" class="nav-link" aria-label="Navigate to send new files">Send new files</a>
+        <button type="button" id="headerSecurityBtn" class="nav-btn" aria-haspopup="dialog" aria-label="View security and encryption architecture">Security</button>
+        <button type="button" id="headerStorageBtn" class="nav-btn" aria-haspopup="dialog" aria-label="View storage and ephemeral retention policy">Storage</button>
+      </nav>
+    </header>
+
+    <!-- Main Decryption Workspace Console -->
+    <main class="console-wrapper" id="recipientConsoleWrapper">
+      <section class="transfer-console" id="recipientPanel" aria-labelledby="recipientTitle">
+        <!-- Console Bar -->
+        <div class="console-header">
+          <div class="console-title-group">
+            <h1 id="recipientTitle" class="console-title">Files shared with you</h1>
+            <span class="console-subtitle">In-browser AES-256-GCM authenticated decryption</span>
+          </div>
+          <div class="console-status">
+            <span class="status-dot ready" id="statusDot" aria-hidden="true"></span>
+            <span id="statusLabel">Decryption console</span>
+          </div>
+        </div>
+
+        <!-- Diagnostic Error Banner -->
+        <div id="errorBanner" class="diagnostic-banner danger hidden" role="alert" aria-live="assertive">
+          <svg class="diagnostic-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <div style="flex: 1;">
+            <div id="errorTitle" style="font-weight: 600; margin-bottom: 2px;">Decryption Error</div>
+            <div id="errorMessage"></div>
+          </div>
+        </div>
+
+        <!-- Loading / Progress State -->
+        <div id="loadingSection" class="loading-panel" role="status">
+          <div class="loading-title">Retrieving encrypted files</div>
+          <p id="loadingText" class="loading-text">
+            Reading decryption key from URL fragment...
+          </p>
+        </div>
+
+        <!-- Recipient Content Section -->
+        <div id="recipientContent" class="hidden">
+          <div class="notice-box subtle">
+            Files are decrypted and authenticated locally in your browser using AES-256-GCM. Plaintext is released only after the cryptographic authentication tag is verified.
+          </div>
+
+          <div class="manifest-summary">
+            <div class="summary-meta">
+              <span>Collection manifest:</span>
+              <span id="collectionInfo">0 files · 0 Bytes</span>
+            </div>
+          </div>
+
+          <!-- Files List Container -->
+          <div id="recipientFileList" class="file-list-container" role="list" aria-label="Shared files list"></div>
+
+          <!-- Actions & Ephemeral Notice -->
+          <div class="recipient-actions-wrap">
+            <div class="recipient-buttons-row">
+              <button type="button" id="decryptBtn" class="btn btn-secondary" style="display: none;">Retry authentication</button>
+              <button type="button" id="downloadAllBtn" class="btn btn-primary btn-lg" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download all (ZIP)
+              </button>
+            </div>
+
+            <div class="notice-box warning">
+              <strong>Ephemeral storage notice:</strong> Files are stored temporarily on the server's ephemeral filesystem and may become unavailable after restart, redeployment or instance replacement. No retention guarantee is provided.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Compact Footer -->
+    <footer class="site-footer" id="siteFooter">
+      <div class="footer-copy">© 2026 Obsidian Secure V2 · Encrypted File Sharing</div>
+      <div class="footer-nav">
+        <a href="/" class="nav-link" aria-label="Navigate to send new files">Send new files</a>
+        <button type="button" id="footerSecurityBtn" class="footer-link-btn" aria-haspopup="dialog" aria-label="View security and encryption architecture">Security</button>
+        <button type="button" id="footerStorageBtn" class="footer-link-btn" aria-haspopup="dialog" aria-label="View storage and ephemeral retention policy">Storage policy</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Dialog 1: Security & Architecture Modal -->
+  <dialog id="securityModal" class="info-modal-dialog" aria-labelledby="securityModalTitle" aria-describedby="securityModalDesc">
+    <div class="info-modal-content">
+      <div class="info-modal-header">
+        <div class="info-modal-title-wrap">
+          <div class="info-modal-tag">Security & System Architecture</div>
+          <h2 id="securityModalTitle" class="info-modal-title">Decryption & Verification Policy</h2>
+          <p id="securityModalDesc" class="info-modal-desc">Local browser-side cryptographic verification and metadata binding.</p>
+        </div>
+        <button type="button" id="closeSecurityModalBtn" class="btn-modal-close" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="info-modal-body">
+        <div class="notice-box subtle" style="margin-bottom: 16px;">
+          <strong>Local verification:</strong> Plaintext is released only after the cryptographic AES-256-GCM authentication tag is successfully verified on your device.
+        </div>
+
+        <div class="tech-modal-grid">
+          <div class="tech-spec-card">
+            <h3 class="tech-col-title">
+              <span class="tech-col-num">01</span>
+              Local Verification
+            </h3>
+            <dl class="tech-data-list">
+              <div class="tech-data-item">
+                <dt class="tech-label">Cipher</dt>
+                <dd class="tech-val">AES-256-GCM (in-browser)</dd>
+              </div>
+              <div class="tech-data-item">
+                <dt class="tech-label">Integrity check</dt>
+                <dd class="tech-val">128-bit authentication tag</dd>
+              </div>
+              <div class="tech-data-item">
+                <dt class="tech-label">Plaintext release</dt>
+                <dd class="tech-val">Verified tag only</dd>
+              </div>
+              <div class="tech-data-item">
+                <dt class="tech-label">Failure isolation</dt>
+                <dd class="tech-val">Independent per-file keys</dd>
+              </div>
+            </dl>
+            <p class="tech-desc">
+              Ciphertext is downloaded from the server and decrypted directly in your browser's memory. If a file was modified or corrupted in transit, its authentication tag fails and plaintext is never released.
+            </p>
+          </div>
+
+          <div class="tech-spec-card">
+            <h3 class="tech-col-title">
+              <span class="tech-col-num">02</span>
+              Metadata Binding
+            </h3>
+            <dl class="tech-data-list">
+              <div class="tech-data-item">
+                <dt class="tech-label">Protocol</dt>
+                <dd class="tech-val">Version 1 (v1)</dd>
+              </div>
+              <div class="tech-data-item">
+                <dt class="tech-label">Collection ID</dt>
+                <dd class="tech-val mono-truncate">{{ share_id }}</dd>
+              </div>
+              <div class="tech-data-item">
+                <dt class="tech-label">AAD binding</dt>
+                <dd class="tech-val">Collection + File IDs + Filename</dd>
+              </div>
+              <div class="tech-data-item">
+                <dt class="tech-label">Cross-file check</dt>
+                <dd class="tech-val">Substitution rejected</dd>
+              </div>
+            </dl>
+            <p class="tech-desc">
+              Filenames, MIME types, and file sizes are cryptographically bound to each file's ciphertext, preventing cross-file and cross-collection substitution attacks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-modal-footer">
+        <button type="button" id="dismissSecurityModalBtn" class="btn btn-primary btn-sm">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Dialog 2: Storage & Ephemeral Retention Modal -->
+  <dialog id="storageModal" class="info-modal-dialog" aria-labelledby="storageModalTitle" aria-describedby="storageModalDesc">
+    <div class="info-modal-content">
+      <div class="info-modal-header">
+        <div class="info-modal-title-wrap">
+          <div class="info-modal-tag">Storage & Ephemeral Architecture</div>
+          <h2 id="storageModalTitle" class="info-modal-title">Storage & Retention Policy</h2>
+          <p id="storageModalDesc" class="info-modal-desc">Server persistence, transfer limits and ephemeral lifecycle.</p>
+        </div>
+        <button type="button" id="closeStorageModalBtn" class="btn-modal-close" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="info-modal-body">
+        <div class="notice-box warning" style="margin-bottom: 16px;">
+          <strong>Ephemeral storage notice:</strong> Files are stored temporarily on the server's ephemeral filesystem and may become unavailable after restart, redeployment or instance replacement. No retention guarantee is provided.
+        </div>
+
+        <div class="tech-spec-card">
+          <h3 class="tech-col-title">
+            <span class="tech-col-num">01</span>
+            Storage Parameters & Limits
+          </h3>
+          <dl class="tech-data-list">
+            <div class="tech-data-item">
+              <dt class="tech-label">Storage model</dt>
+              <dd class="tech-val">Ephemeral server filesystem</dd>
+            </div>
+            <div class="tech-data-item">
+              <dt class="tech-label">Retention</dt>
+              <dd class="tech-val">Temporary (no persistence guarantee)</dd>
+            </div>
+            <div class="tech-data-item">
+              <dt class="tech-label">Server visibility</dt>
+              <dd class="tech-val">Opaque ciphertext only</dd>
+            </div>
+            <div class="tech-data-item">
+              <dt class="tech-label">Persistence</dt>
+              <dd class="tech-val">No guarantee provided</dd>
+            </div>
+          </dl>
+          <p class="tech-desc">
+            Download and save files to your local device immediately. Files are stored temporarily on the server's ephemeral filesystem and may become unavailable after restart, redeployment or instance replacement.
+          </p>
+        </div>
+      </div>
+
+      <div class="info-modal-footer">
+        <button type="button" id="dismissStorageModalBtn" class="btn btn-primary btn-sm">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Scripts -->
+  <script src="/static/vendor/jszip.min.js"></script>
+  <script src="/static/js/crypto.js"></script>
+  <script src="/static/js/recipient.js"></script>
+</body>
+</html>

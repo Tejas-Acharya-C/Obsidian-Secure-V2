@@ -173,12 +173,10 @@ body {
 }
 
 .brand-emblem {
-  width: 14px;
-  height: 14px;
-  background-color: var(--color-action-bg);
-  transform: rotate(45deg);
-  border-radius: 1px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  display: block;
 }
 
 .brand-text {

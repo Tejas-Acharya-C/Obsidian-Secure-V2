@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- The Obsidian Core — Official Brand Mark for Obsidian Secure V2 -->
+  <!-- Top-Left Facet Plate (Light Platinum) -->
+  <path d="M30.5 4L7 29.5L15 29.5L29 15.5L30.5 4Z" fill="#E6EAEF"/>
+  <!-- Top-Right Facet Plate (Brilliant Platinum Highlight) -->
+  <path d="M33.5 4L35 15.5L49 29.5L57 29.5L33.5 4Z" fill="#F3F5F7"/>
+  <!-- Bottom-Left Facet Plate (Architectural Steel Shadow) -->
+  <path d="M7 34.5L30.5 60L29 48.5L15 34.5L7 34.5Z" fill="#88929E"/>
+  <!-- Bottom-Right Facet Plate (Deep Obsidian Core Shadow) -->
+  <path d="M57 34.5L49 34.5L35 48.5L33.5 60L57 34.5Z" fill="#5A6470"/>
+  <!-- Protected Central Cryptographic Core -->
+  <polygon points="32,20 44,32 32,44 20,32" fill="#FFFFFF"/>
+</svg>
+
